@@ -1,0 +1,8 @@
+(library
+ (inline_tests)
+ (name Advent)
+ (libraries stdio base vg)
+  (modules day1)
+
+ (preprocess
+  (pps ppx_inline_test ppx_expect ppx_jane)))
