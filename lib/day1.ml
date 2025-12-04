@@ -114,7 +114,7 @@ let%expect_test "part 2" =
   let _l_number = part2 (read_input input_string) in
   let l_number = part2 _input in
   print_s [%sexp (l_number : int)];
-  [%expect {| 80 |}]
+  [%expect {| 5657 |}]
 
 let%expect_test "part 1" =
   (* let res = part1 input_string in *)

@@ -2,7 +2,7 @@
  (inline_tests)
  (name Advent)
  (libraries stdio base eio eio_main piaf)
-  (modules day1 input)
+  (modules day1 input day2)
 
  (preprocess
   (pps ppx_inline_test ppx_expect ppx_jane)))
