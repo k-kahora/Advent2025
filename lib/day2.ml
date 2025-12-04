@@ -28,16 +28,56 @@ let ripped_apart input_list =
          = String.sub a (number_length / 2) (number_length / 2))
   |> List.map int_of_string |> List.fold_left ( + ) 0
 
+let chunkify input =
+  (* NOTE find the split of the string, then go through by chunks up to half of the string length, *)
+  (* NOTE for each chunck compare it to the rest of the string if at any point its not equal early return*)
+  (* NOTE  otherwise keep it and continue to the next chunk until there is none left then its invalid *)
+  let permutations, split_string =
+    let length = String.length input / 2 in
+    let split_string = String.sub input 0 length in
+    let permutations =
+      List.init length (fun i -> String.sub split_string 0 (i + 1))
+    in
+    (permutations, split_string)
+  in
+  (permutations, split_string)
+
+let ripped_apart_two input_list =
+  String.split_on_char ',' input_list
+  |> List.map @@ String.split_on_char '-'
+  |> List.map (function
+       | [ a; b ] ->
+           ( Base.String.strip a |> int_of_string,
+             Base.String.strip b |> int_of_string )
+       | _a -> failwith "not valid")
+  |> List.map (fun (start, finish) ->
+         List.init (finish - start + 1) (fun i -> i + start))
+  |> List.flatten
+  |> List.map string_of_int (* |> List.filter chunkify *)
+
 open Base
 open Stdio
 
-let%expect_test "" =
+let%expect_test "chunkify" =
+  (* let real_input = Advent.Input.get_input ~year:2025 ~day:02 in *)
+  (* let real_input = Input.get_input ~year:2025 ~day:02 in *)
+  let output = chunkify "446446" in
+  (* let output = ripped_apart real_input in *)
+  print_s [%sexp (output : string list * string)];
+  [%expect {| 1 |}]
+
+let%expect_test "part2" =
+  (* let real_input = Advent.Input.get_input ~year:2025 ~day:02 in *)
+  (* let real_input = Input.get_input ~year:2025 ~day:02 in *)
+  let output = ripped_apart_two input_string in
+  (* let output = ripped_apart real_input in *)
+  print_s [%sexp (output : string list)];
+  [%expect {| 4174379265 |}]
+
+let%expect_test "part1" =
   (* let real_input = Advent.Input.get_input ~year:2025 ~day:02 in *)
   let real_input = Input.get_input ~year:2025 ~day:02 in
   (* let output = ripped_apart input_string in *)
   let output = ripped_apart real_input in
   print_s [%sexp (output : int)];
-  [%expect {|
-    51
-    -17
-    |}]
+  [%expect {| 28844599675 |}]
