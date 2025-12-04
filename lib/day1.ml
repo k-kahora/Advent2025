@@ -42,6 +42,32 @@ let[@ocaml.warning "-27"] parse_input str =
   in
   num
 
+let part2 input =
+  (* No math just simulate the clicks *)
+  (* You need a running sum of all the 0's calced and the current location of a rotation *)
+  (* ntake the number intteger divide it by 10 if its greater than 100 add that, take the mode of it add to previouse if the hundered digiti is different add one *)
+  let init = (0, 50) in
+  let res, _ =
+    List.fold_left ~init
+      ~f:(fun (res, loc) c ->
+        let clicks = parse_input c in
+        let direction = if clicks < 0 then `Left else `Right in
+        let zeros, l = (ref 0, ref loc) in
+        (* printf "clicks %d" clicks; *)
+        for _ = 1 to abs clicks do
+          (* this is inclusive *)
+          (* Go through each click and ii a click is ever divisible by zero add one  *)
+          (* printf "loc -> %d res -> %d" !l (!zeros + res); *)
+          (l := match direction with `Left -> !l - 1 | `Right -> !l + 1);
+          if Int.rem !l 100 = 0 then zeros := !zeros + 1
+        done;
+        let res = !zeros + res in
+        (* hunreds digits changes from old posion to new posions its over *)
+        (res, !l))
+      input
+  in
+  res
+
 let part1 input =
   (* You need a running sum of all the 0's calced and the current location of a rotation *)
   let init = (0, 50) in
@@ -50,7 +76,7 @@ let part1 input =
       ~f:(fun (res, loc) c ->
         let new_loc = parse_input c |> fun a -> loc + a |> cycle in
         (* printf "%d\n" new_loc; *)
-        printf "%s -> %d\n" c new_loc;
+        (* printf "%s -> %d\n" c new_loc; *)
         if new_loc = 0 then (res + 1, new_loc) else (res, new_loc))
       input
   in
@@ -67,6 +93,8 @@ let%expect_test "cycle test" =
   print_s [%sexp (t_number : int)];
   print_s [%sexp (neg_number : int)];
   [%expect {|
+    3
+    82
     |}]
 
 let%expect_test "file_read" =
@@ -78,13 +106,15 @@ let%expect_test "file_read" =
   print_s [%sexp (l_number : int)];
   [%expect {| 4036 |}]
 
-(* let%expect_test "part 1" = *)
-(*   (\* let res = part1 input_string in *\) *)
-(*   let l_number = part1 (read_input input_string) in *)
-(*   print_s [%sexp (l_number : int)]; *)
-(*   [%expect {| *)
-(*            3 *)
-(*     |}] *)
+let%expect_test "part 2" =
+  (* let res = part1 input_string in *)
+  let _input =
+    read_lines "/home/malcolm/Projects/ocaml/advent-of-code/2025/Advent/input"
+  in
+  let _l_number = part2 (read_input input_string) in
+  let l_number = part2 _input in
+  print_s [%sexp (l_number : int)];
+  [%expect {| 80 |}]
 
 let%expect_test "part 1" =
   (* let res = part1 input_string in *)
@@ -93,9 +123,7 @@ let%expect_test "part 1" =
   in
   let l_number = part1 input in
   print_s [%sexp (l_number : int)];
-  [%expect {|
-            3
-    |}]
+  [%expect {| 984 |}]
 
 let%expect_test "parse dial" =
   let r_number = "R51" |> parse_input in
