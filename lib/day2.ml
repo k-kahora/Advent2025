@@ -32,36 +32,31 @@ let chunkify input =
   (* NOTE find the split of the string, then go through by chunks up to half of the string length, *)
   (* NOTE for each chunck compare it to the rest of the string if at any point its not equal early return*)
   (* NOTE  otherwise keep it and continue to the next chunk until there is none left then its invalid *)
-  let permutations, _split_string =
+  let permutations =
     let length = String.length input / 2 in
     let split_string = String.sub input 0 length in
     let permutations =
       List.init length (fun i -> String.sub split_string 0 (i + 1))
     in
-    (permutations, split_string)
+    permutations
   in
   (* Loop over eache permutaion and do chunk wis comparsions use fold_until  *)
   (* Base.(Stdio.(print_s [%sexp (permutations : string list)])); *)
-  List.fold_left
-    (fun res permutation ->
-      if res then res
+  List.map
+    (fun permutation ->
+      let perm_size = String.length permutation in
+      let string_length = String.length input in
+      if string_length mod perm_size <> 0 then false
       else
-        let perm_size = String.length permutation in
-        let string_length = String.length input in
-        if string_length mod perm_size <> 0 then false
-        else
-          let permutation_length = String.length permutation in
-          let chunk = string_length / permutation_length in
-          (* Printf.printf "input l -> %d, perm_length -> %d" string_length *)
-          (* permutation_length; *)
-          let result =
-            List.init chunk (fun i ->
-                permutation = String.sub input (i * perm_size) perm_size)
-            |> List.fold_left ( && ) true
-          in
-          (* Printf.printf "result -> %b\n" result; *)
-          result)
-    false permutations
+        let permutation_length = String.length permutation in
+        let chunk = string_length / permutation_length in
+        (* Printf.printf "input l -> %d, perm_length -> %d" string_length *)
+        (* permutation_length; *)
+        List.init chunk (fun i ->
+            permutation = String.sub input (i * perm_size) perm_size)
+        |> List.for_all (fun a -> a))
+    permutations
+  |> List.exists (fun a -> a)
 
 let ripped_apart_two input_list =
   String.split_on_char ',' input_list
@@ -91,11 +86,11 @@ let%expect_test "chunkify" =
 let%expect_test "part2" =
   (* let real_input = Advent.Input.get_input ~year:2025 ~day:02 in *)
   (* let real_input = Input.get_input ~year:2025 ~day:02 in *)
-  let real_input = Input.get_input ~year:2025 ~day:02 in
-  let output = ripped_apart_two real_input in
-  (* let output = ripped_apart real_input in *)
+  (* let real_input = Input.get_input ~year:2025 ~day:02 in *)
+  (* let output = ripped_apart_two real_input in *)
+  let output = ripped_apart input_string in
   print_s [%sexp (output : int)];
-  [%expect {| 4174379265 |}]
+  [%expect {| 48778605167 |}]
 
 let%expect_test "part1" =
   (* let real_input = Advent.Input.get_input ~year:2025 ~day:02 in *)
