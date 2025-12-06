@@ -13,7 +13,9 @@ module Part1 = struct
     print_endline ""
 
   let get_banks input =
-    String.split_on_char '\n' input |> List.map Base.String.strip
+    String.split_on_char '\n' input
+    |> List.map Base.String.strip
+    |> List.filter (fun a -> a <> "")
 
   let bank_to_int_list =
    fun bank ->
@@ -26,13 +28,13 @@ module Part1 = struct
   (* NOTE pre compute maximum suffix at each character non inclusive start from the back *)
   let joltage_suffix_list : int list -> int list =
    fun bank ->
-    List.rev bank |> fun [@ocaml.warning "-8"] (a :: _b :: rest) ->
+    List.rev bank |> fun [@ocaml.warning "-8"] (a :: rest) ->
     List.fold_left
-      (fun maximum_jolt_list batterie ->
-        let max_jolt = List.hd maximum_jolt_list in
-        if batterie > max_jolt then batterie :: maximum_jolt_list
-        else max_jolt :: maximum_jolt_list)
-      [ a; a; a ] rest
+      (fun (maximum_jolt_list, max_jolt) batterie ->
+        if batterie > max_jolt then (batterie :: maximum_jolt_list, batterie)
+        else (max_jolt :: maximum_jolt_list, max_jolt))
+      ([ a ], a) rest
+    |> fun (_ :: a, _) -> a
 
   let maximum_joltage : int list -> int list -> int =
    fun bank joltage_maximum_list ->
@@ -48,6 +50,11 @@ module Part1 = struct
     | [ _a ] -> [ 0 ]
     | hd :: rest -> hd :: replace_last_0 rest
 
+  let rec remove_last = function
+    | [] -> []
+    | [ _a ] -> []
+    | hd :: rest -> hd :: remove_last rest
+
   let remove_last_and_first lst =
     let rec remove_last = function
       | [] -> []
@@ -62,9 +69,9 @@ module Part1 = struct
     let s =
       List.map
         (fun a ->
-          let[@ocaml.warning "-8"] (_ :: suffix_list) = joltage_suffix_list a in
+          let[@ocaml.warning "-8"] suffix_list = joltage_suffix_list a in
           (* let bank = 0 :: a |> remove_last in *)
-          let bank = a |> replace_last_0 in
+          let bank = a |> remove_last in
           let result = maximum_joltage bank suffix_list in
           Printf.printf "result -> %d\n" result;
           print_lists bank suffix_list;
@@ -79,18 +86,21 @@ open Base
 open Stdio
 
 let%expect_test "[day3-part1]" =
-  print_s [%sexp (part1 test_input : int)];
+  (* let t_input = part1 test_input in *)
+  let puzzle_input = Input.get_input ~year:2025 ~day:03 in
+  let output = puzzle_input |> part1 in
+  print_s [%sexp (output : int)];
   [%expect {| (9 9 9 9 9 9 9 2 2 2 2 2 1 1 1) |}]
 
 let%expect_test "[day3] maximum joltage" =
-  let bank = bank_to_int_list "818911211" in
-  let[@ocaml.warning "-8"] (_ :: suffix_list) = bank |> joltage_suffix_list in
-  let[@ocaml.warning "-8"] bank = bank in
-  print_s [%sexp (bank : int list)];
-  print_s [%sexp (suffix_list : int list)];
-  let output = maximum_joltage bank suffix_list in
+  let bank = bank_to_int_list "234234234234278" in
+  let[@ocaml.warning "-8"] suffix_list = bank |> joltage_suffix_list in
+  let[@ocaml.warning "-8"] bank = bank |> remove_last in
   (* print_s [%sexp (bank : int list)]; *)
   (* print_s [%sexp (suffix_list : int list)]; *)
+  let output = maximum_joltage bank suffix_list in
+  print_s [%sexp (bank : int list)];
+  print_s [%sexp (suffix_list : int list)];
   print_s [%sexp (output : int)];
   [%expect {| (9 9 9 9 9 9 9 2 2 2 2 2 1 1 1) |}]
 
