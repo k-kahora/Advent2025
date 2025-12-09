@@ -1,4 +1,5 @@
 (* NOTE Part2 monotonic stack with deletions credits *)
+(* NOTE TODO I do not truly understand monotonci stack my functions need some serious work *)
 
 let test_input =
   {| 987654321111111
@@ -74,19 +75,74 @@ end =
   Part1
 
 module Part2 = struct
+  (* NOTE size 12 is needed so! *)
+  (* Create a monotnonically decreasing stack of size 12 maximum *)
+  (* Only add if its less than top of the stack *)
+  (* 234234234234278 *)
+  (* 15 chars 12 max 3 delete tokens *)
+
+  (*  [ 2 ] *)
+  (* pop token = 2 *)
+  (* [ 3 ] *)
+  (* pop token = 1 *)
+  (* [ 4 ] *)
+  (* [ 4 ] token = 0 *)
+  (* add the rest *)
+  type int_list = Base.Int.t Base.List.t [@@deriving sexp]
+
+  let total_delete_tokens bank = List.length bank - 12
+
+  (* This is not operating like a true monotonic stack!  *)
+  let super_joltage (bank : int list) =
+    let skip_tokens = total_delete_tokens bank in
+    let pop = function
+      | [] -> failwith "can not pop empty list"
+      | _ :: rest -> rest
+    in
+
+    let rec loop stack skip_tokens (bank : int list) =
+      let[@ocaml.warning "-8"] (stack_head :: _) = stack in
+      (* sexp_of_int_list stack |> Base.Sexp.to_string |> print_endline; *)
+      (* print_endline (string_of_int skip_tokens); *)
+      match bank with
+      | [] -> List.rev stack
+      | a when skip_tokens = 0 -> List.rev stack @ a
+      (* | _ when List.length stack = 12 -> List.rev stack *)
+      | batterie :: bank when batterie > stack_head && skip_tokens > 0 ->
+          loop (batterie :: pop stack) (skip_tokens - 1) bank
+      | batterie :: bank when batterie <= stack_head && List.length stack < 12
+        ->
+          loop (batterie :: stack) skip_tokens bank
+      | _ :: bank -> loop stack skip_tokens bank
+    in
+    loop [ -1 ] (skip_tokens + 1)
+      bank (* NOTE add one to skip tokens to account for the first skip of -1 *)
+
+  let total_joltage = List.fold_left ( + ) 0
+
+  let create_number_from_int_list : int list -> int =
+   fun bank ->
+    let[@ocaml.warning "-8"] (head :: tail) = bank in
+    List.fold_left
+      (fun final_number batt -> (final_number * 10) + batt)
+      head tail
+
+  let mutate_into_joltage : int list list -> int list =
+   fun banks ->
+    List.map super_joltage banks |> List.map create_number_from_int_list
+
   let get_banks input =
     String.split_on_char '\n' input
     |> List.map Base.String.strip
     |> List.filter (fun a -> a <> "")
 
-  let banks_to_int_list banks =
-    let bank_to_int_list =
-     fun bank ->
-      Base.String.to_list bank
-      |> List.map (String.make 1)
-      |> List.map int_of_string
-    in
-    List.map bank_to_int_list banks
+  let bank_to_int_list =
+   fun bank ->
+    Base.String.to_list bank
+    |> List.map (String.make 1)
+    |> List.map int_of_string
+
+  let banks_to_int_list banks = List.map bank_to_int_list banks
 end
 
 module TestPart2 = struct
@@ -94,9 +150,37 @@ module TestPart2 = struct
   open Base
   open Stdio
 
+  let%expect_test "[part2] -> total joltage" =
+    (* let real_input = Input.get_input ~day:3 ~year:2025 in *)
+    let joltages =
+      get_banks test_input |> banks_to_int_list |> mutate_into_joltage
+    in
+    let out = joltages |> total_joltage in
+    print_s [%sexp (joltages : int list)];
+    print_s [%sexp (out : int)];
+    [%expect {||}]
+
+  let%expect_test "[part2] -> super joltage" =
+    let banks =
+      bank_to_int_list
+        "4732321333332463233337712234322122322247222252423773321362313613333336333732233372323328332333322777"
+      |> super_joltage |> create_number_from_int_list
+    in
+    print_s [%sexp (banks : int)];
+    [%expect {||}]
+
+  let%expect_test "[day3] number form int list" =
+    let bank =
+      bank_to_int_list "234234234234278" |> create_number_from_int_list
+    in
+    print_s [%sexp (bank : int)];
+    [%expect {||}]
+
   let%expect_test "[part2] -> get banks" =
-    let banks = get_banks test_input |> banks_to_int_list in
-    print_s [%sexp (banks : int list list)];
+    let banks =
+      get_banks test_input |> banks_to_int_list |> mutate_into_joltage
+    in
+    print_s [%sexp (banks : int list)];
     [%expect {||}]
 end
 
