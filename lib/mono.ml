@@ -10,113 +10,60 @@
 (*   in *)
 
 (* core part of monotonic stack *)
-let rec format_stack input stack value ~skips =
+let rec format_stack ~stack ~value =
   match stack with
-  | item :: rest
-    when item < value && List.length input + List.length stack > skips ->
-      format_stack input rest value ~skips:(skips - 1)
-  | [] -> ([ value ], skips)
-  | _ when List.length stack <= 12 -> (value :: stack, skips)
-  | _ -> (stack, skips)
+  | item :: rest when item < value -> format_stack ~stack:rest ~value
+  | [] -> [ value ]
+  | _ -> value :: stack
 
 (* Stack must be length 12 *)
 (* Input can be arbitrarily long *)
 (* Must check entire input *)
 (* Only get a set number of deletes *)
-let skips input = List.length input - 12
+let _skips input = List.length input - 12
 
 (* monotoncially increasing *)
-let rec loop stack input skips =
+let rec loop stack input =
   let[@ocaml.warning "-8"] (stack_head :: _stack_tail) = stack in
   (* let input_t = input in *)
   (* Base.(Stdio.(print_s [%sexp (stack : int list)])); *)
-  Printf.printf "head -> %d, remaining -> %d tokens -> %d" stack_head
-    (List.length input) skips;
+  Printf.printf "head -> %d\n " stack_head;
+  (*   (List.length input) skips; *)
   Base.(Stdio.(print_s [%sexp (stack : int list)]));
-
   match input with
   | [] -> stack
-  | batterie :: tail when batterie <= stack_head && List.length stack >= 12 ->
-      loop stack tail skips
   | batterie :: tail when batterie <= stack_head ->
-      loop (batterie :: stack) tail skips
+      loop (batterie :: stack) tail
   | batterie :: tail ->
-      let stack, skips = format_stack tail stack batterie ~skips in
-      loop stack tail skips
+      let stack = format_stack ~stack ~value:batterie in
+      loop stack tail
 
-let maximum_joltage input =
-  loop [ Int.max_int ] input @@ skips input |> List.rev
-  |> fun [@ocaml.warning "-8"] (_ :: rest) -> rest
+let maximum_joltage input = loop [ Int.max_int ] input |> List.rev |> List.tl
+
+let bank_to_int_list =
+ fun bank ->
+  Base.String.to_list bank |> List.map (String.make 1) |> List.map int_of_string
 
 open Base
 open Stdio
 
-let%expect_test "[mono] craft stack " =
+let%expect_test "[mono] mono advent" =
+  let output = format_stack ~stack:[ 1; 2; 5; 6; 8; 9; 10 ] ~value:7 in
+  print_s [%sexp (output : int list)];
+  [%expect {|
+     (6 5 3)
+    |}]
+
+let%expect_test "[mono] long input  " =
   let input =
-    [
-      8;
-      1;
-      8;
-      1;
-      8;
-      1;
-      9;
-      1;
-      1;
-      1;
-      1;
-      2;
-      1;
-      1;
-      1;
-      4;
-      5;
-      8;
-      5;
-      3;
-      4;
-      5;
-      8;
-      1;
-      6;
-      4;
-      9;
-      9;
-      9;
-      9;
-      9;
-      9;
-      2;
-      3;
-      9;
-      8;
-      0;
-      1;
-      4;
-      4;
-      8;
-    ]
+    bank_to_int_list
+      "4732321333332463233337712234322122322247222252423773321362313613333336333732233372323328332333322777"
   in
+
+  print_s [%sexp (input : int list)];
+
   let output = maximum_joltage input in
   print_s [%sexp (output : int list)];
   [%expect {|
-     (6 5 3)
-    |}]
-
-let%expect_test "[mono] mono advent" =
-  let output =
-    maximum_joltage [ 9; 8; 7; 6; 5; 4; 3; 2; 1; 1; 1; 1; 1; 1; 1 ]
-  in
-  print_s [%sexp (output : int list)];
-  [%expect {|
-     (6 5 3)
-    |}]
-
-let%expect_test "[mono] stack boot" =
-  let output, _ =
-    format_stack [ 1; 3; 3; 5; 6 ] [ 1; 3; 3; 5; 6 ] 5 ~skips:1000
-  in
-  print_s [%sexp (output : int list)];
-  [%expect {|
-     (6 5 3)
+            Expected
     |}]
