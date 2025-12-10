@@ -154,12 +154,10 @@ module TestPart2 = struct
   open Stdio
 
   let%expect_test "[part2] -> get banks" =
-    let banks = bank_to_int_list "811111111111119" |> Mono.maximum_joltage in
+    (* let banks = bank_to_int_list "811111111111119" |> Mono.maximum_joltage in *)
     (* let b = banks |> Mono.maximum_joltage in *)
-    (* let t_inpt = Input.get_input ~day:03 ~year:2025 in *)
-    (* let banks = *)
-    (*   get_banks test_input |> banks_to_int_list |> mutate_into_joltage *)
-    (* in *)
+    let t_inpt = Input.get_input ~day:03 ~year:2025 in
+    let banks = get_banks t_inpt |> banks_to_int_list |> mutate_into_joltage in
     (* let length = *)
     (*   List.map ~f:(fun a -> Int.to_string a |> String.length) banks *)
     (* in *)

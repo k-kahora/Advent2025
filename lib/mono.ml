@@ -27,13 +27,13 @@ let _skips input = List.length input - 12
 (* monotoncially increasing *)
 let rec loop stack input =
   let[@ocaml.warning "-8"] (stack_head :: _stack_tail) = stack in
-  let input_head = Base.List.nth input 0 |> Option.value ~default:(-1) in
+  (* let input_head = Base.List.nth input 0 |> Option.value ~default:(-1) in *)
   let tokens = List.length input - (13 - List.length stack) in
   (* let input_t = input in *)
   (* Base.(Stdio.(print_s [%sexp (stack : int list)])); *)
-  Printf.printf "stack_head -> %d\n input_head -> %d\n " stack_head input_head;
+  (* Printf.printf "stack_head -> %d\n input_head -> %d\n " stack_head input_head; *)
   (*   (List.length input) skips; *)
-  Base.(Stdio.(print_s [%sexp (stack : int list)]));
+  (* Base.(Stdio.(print_s [%sexp (stack : int list)])); *)
   match input with
   | [] -> stack
   | batterie :: tail when batterie <= stack_head && List.length stack < 13 ->
