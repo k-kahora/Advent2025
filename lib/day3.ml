@@ -1,11 +1,14 @@
 (* NOTE Part2 monotonic stack with deletions credits *)
 (* NOTE TODO I do not truly understand monotonci stack my functions need some serious work *)
 
-let test_input =
+let[@ocaml.warning "-32"] test_input =
   {| 987654321111111
 811111111111119
 234234234234278
 818181911112111 |}
+
+let test_input =
+  {|4732321333332463233337712234322122322247222252423773321362313613333336333732233372323328332333322777|}
 
 module Part1 = struct
   let print_lists list1 list2 =
@@ -129,7 +132,7 @@ module Part2 = struct
 
   let mutate_into_joltage : int list list -> int list =
    fun banks ->
-    List.map super_joltage banks |> List.map create_number_from_int_list
+    List.map Mono.maximum_joltage banks |> List.map create_number_from_int_list
 
   let get_banks input =
     String.split_on_char '\n' input
@@ -150,38 +153,18 @@ module TestPart2 = struct
   open Base
   open Stdio
 
-  let%expect_test "[part2] -> total joltage" =
-    (* let real_input = Input.get_input ~day:3 ~year:2025 in *)
-    let joltages =
-      get_banks test_input |> banks_to_int_list |> mutate_into_joltage
-    in
-    let out = joltages |> total_joltage in
-    print_s [%sexp (joltages : int list)];
-    print_s [%sexp (out : int)];
-    [%expect {||}]
-
-  let%expect_test "[part2] -> super joltage" =
-    let banks =
-      bank_to_int_list
-        "4732321333332463233337712234322122322247222252423773321362313613333336333732233372323328332333322777"
-      |> super_joltage |> create_number_from_int_list
-    in
-    print_s [%sexp (banks : int)];
-    [%expect {||}]
-
-  let%expect_test "[day3] number form int list" =
-    let bank =
-      bank_to_int_list "234234234234278" |> create_number_from_int_list
-    in
-    print_s [%sexp (bank : int)];
-    [%expect {||}]
-
   let%expect_test "[part2] -> get banks" =
-    let banks =
-      get_banks test_input |> banks_to_int_list |> mutate_into_joltage
-    in
+    let banks = bank_to_int_list test_input in
+    let b = banks |> Mono.maximum_joltage in
+    (* let t_inpt = Input.get_input ~day:03 ~year:2025 in *)
+    (* let banks = get_banks t_inpt |> banks_to_int_list |> mutate_into_joltage in *)
+    (* let length = *)
+    (*   List.map ~f:(fun a -> Int.to_string a |> String.length) banks *)
+    (* in *)
+    (* let output = banks |> total_joltage in *)
     print_s [%sexp (banks : int list)];
-    [%expect {||}]
+    print_s [%sexp (b : int list)];
+    [%expect {| True Test |}]
 end
 
 module TestPart1 = struct
