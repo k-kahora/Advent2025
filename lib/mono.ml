@@ -10,11 +10,13 @@
 (*   in *)
 
 (* core part of monotonic stack *)
-let rec format_stack ~stack ~value =
+let rec format_stack ~stack ~value tokens input =
   match stack with
-  | item :: rest when item < value -> format_stack ~stack:rest ~value
+  | item :: rest when item < value && tokens > 0 ->
+      format_stack ~stack:rest ~value (tokens - 1) input
   | [] -> [ value ]
-  | _ -> value :: stack
+  | _ when List.length stack < 13 -> value :: stack
+  | _ -> stack
 
 (* Stack must be length 12 *)
 (* Input can be arbitrarily long *)
@@ -25,17 +27,19 @@ let _skips input = List.length input - 12
 (* monotoncially increasing *)
 let rec loop stack input =
   let[@ocaml.warning "-8"] (stack_head :: _stack_tail) = stack in
+  let input_head = Base.List.nth input 0 |> Option.value ~default:(-1) in
+  let tokens = List.length input - (13 - List.length stack) in
   (* let input_t = input in *)
   (* Base.(Stdio.(print_s [%sexp (stack : int list)])); *)
-  Printf.printf "head -> %d\n " stack_head;
+  Printf.printf "stack_head -> %d\n input_head -> %d\n " stack_head input_head;
   (*   (List.length input) skips; *)
   Base.(Stdio.(print_s [%sexp (stack : int list)]));
   match input with
   | [] -> stack
-  | batterie :: tail when batterie <= stack_head ->
+  | batterie :: tail when batterie <= stack_head && List.length stack < 13 ->
       loop (batterie :: stack) tail
   | batterie :: tail ->
-      let stack = format_stack ~stack ~value:batterie in
+      let stack = format_stack ~stack ~value:batterie tokens input in
       loop stack tail
 
 let maximum_joltage input = loop [ Int.max_int ] input |> List.rev |> List.tl
@@ -47,12 +51,12 @@ let bank_to_int_list =
 open Base
 open Stdio
 
-let%expect_test "[mono] mono advent" =
-  let output = format_stack ~stack:[ 1; 2; 5; 6; 8; 9; 10 ] ~value:7 in
-  print_s [%sexp (output : int list)];
-  [%expect {|
-     (6 5 3)
-    |}]
+(* let%expect_test "[mono] mono advent" = *)
+(*   let output = format_stack ~stack:[ 1; 2; 5; 6; 8; 9; 10 ] ~value:7 10000 in *)
+(*   print_s [%sexp (output : int list)]; *)
+(*   [%expect {| *)
+(*      (6 5 3) *)
+(*     |}] *)
 
 let%expect_test "[mono] long input  " =
   let input =
@@ -67,3 +71,9 @@ let%expect_test "[mono] long input  " =
   [%expect {|
             Expected
     |}]
+
+(*
+  monon stack that enforcese a min an maximum length, how to do that!!!
+  deletes are not static it is updated as you progress through the values
+  how many spots left - 12 is how many tokens you have
+*)

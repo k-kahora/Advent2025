@@ -7,8 +7,8 @@ let[@ocaml.warning "-32"] test_input =
 234234234234278
 818181911112111 |}
 
-let test_input =
-  {|4732321333332463233337712234322122322247222252423773321362313613333336333732233372323328332333322777|}
+(* let test_input = *)
+(*   {|4732321333332463233337712234322122322247222252423773321362313613333336333732233372323328332333322777|} *)
 
 module Part1 = struct
   let print_lists list1 list2 =
@@ -154,16 +154,18 @@ module TestPart2 = struct
   open Stdio
 
   let%expect_test "[part2] -> get banks" =
-    let banks = bank_to_int_list test_input in
-    let b = banks |> Mono.maximum_joltage in
+    let banks = bank_to_int_list "811111111111119" |> Mono.maximum_joltage in
+    (* let b = banks |> Mono.maximum_joltage in *)
     (* let t_inpt = Input.get_input ~day:03 ~year:2025 in *)
-    (* let banks = get_banks t_inpt |> banks_to_int_list |> mutate_into_joltage in *)
+    (* let banks = *)
+    (*   get_banks test_input |> banks_to_int_list |> mutate_into_joltage *)
+    (* in *)
     (* let length = *)
     (*   List.map ~f:(fun a -> Int.to_string a |> String.length) banks *)
     (* in *)
-    (* let output = banks |> total_joltage in *)
+    let output = banks |> total_joltage in
     print_s [%sexp (banks : int list)];
-    print_s [%sexp (b : int list)];
+    print_s [%sexp (output : int)];
     [%expect {| True Test |}]
 end
 
