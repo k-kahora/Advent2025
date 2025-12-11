@@ -71,6 +71,30 @@ module Part2 = struct
     in
     base_array
 
+  let surrounding_papers (i, j) graph =
+    let directions =
+      [ (1, 1); (1, 0); (1, -1); (0, -1); (-1, -1); (-1, 0); (-1, 1); (0, 1) ]
+    in
+    List.filter_map
+      (fun (n_i, n_j) ->
+        (try Some graph.(i + n_i).(j + n_j) with Invalid_argument _ -> None)
+        |> fun a ->
+        Option.bind a (function `Empty -> None | `Paper -> Some `Paper))
+      directions
+
+  let initial_papers (graph : paper array array) =
+    Base.Array.foldi ~init:[]
+      ~f:(fun i acc row ->
+        Base.Array.foldi ~init:acc
+          ~f:(fun j acc paper ->
+            let surrounded_papers =
+              List.length @@ surrounding_papers (i, j) graph
+            in
+            if paper = `Paper && surrounded_papers < 4 then (i, j) :: acc
+            else acc)
+          row)
+      graph
+
   let convert = function '@' -> `Paper | _ -> `Empty
 
   let contruct_list input =
@@ -93,9 +117,13 @@ module TestPart2 = struct
 
   let%expect_test "[day4] expect test " =
     (* let real_input = Input.get_input ~year:2025 ~day:04 in *)
-    let out = parse_input test_input in
-    print_s [%sexp (out : paper array array)];
-    [%expect {|  Sigma |}]
+    let graph = parse_input test_input in
+    let papers = surrounding_papers (2, 1) graph in
+    print_s [%sexp (papers : paper list)];
+    [%expect {| (Paper Paper Paper Paper Paper Paper Paper) |}];
+    let starting_papers = initial_papers graph in
+    print_s [%sexp (starting_papers : (int * int) list)];
+    [%expect {| (Paper Paper Paper Paper Paper Paper Paper) |}]
 end
 
 include Part1
