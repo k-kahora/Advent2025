@@ -69,7 +69,10 @@ let%expect_test "[mono] long input  " =
   let output = maximum_joltage input in
   print_s [%sexp (output : int list)];
   [%expect {|
-            Expected
+    (4 7 3 2 3 2 1 3 3 3 3 3 2 4 6 3 2 3 3 3 3 7 7 1 2 2 3 4 3 2 2 1 2 2 3 2 2 2
+     4 7 2 2 2 2 5 2 4 2 3 7 7 3 3 2 1 3 6 2 3 1 3 6 1 3 3 3 3 3 3 6 3 3 3 7 3 2
+     2 3 3 3 7 2 3 2 3 3 2 8 3 3 2 3 3 3 3 2 2 7 7 7)
+    (8 3 3 3 3 3 3 2 2 7 7 7)
     |}]
 
 (*
