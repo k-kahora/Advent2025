@@ -26,9 +26,19 @@ module Part1 = struct
     let final =
       A.(
         many_till get_numbers
-          (satisfy @@ function '*' | '+' -> true | _ -> false))
+          ( peek_char_fail >>= function
+            | '*' | '+' -> A.return ()
+            | _ -> A.fail "" ))
     in
-    match A.parse_string ~consume:Prefix final input with
+    let get_arithmatic_symbol =
+      A.(satisfy (function '*' | '+' -> true | _ -> false))
+    in
+    let symbols =
+      A.(eat_whitespace *> get_arithmatic_symbol <* eat_whitespace)
+    in
+    let all_syambols = A.(many_till symbols (char '\n')) in
+    let final_parse = A.(lift2 (fun a b -> (a, b)) final all_syambols) in
+    match A.parse_string ~consume:Prefix final_parse input with
     | Ok a -> a
     | Error err -> failwith err
 end
@@ -42,8 +52,8 @@ module Part1Test = struct
     (*     let input = {|1020 45656 *)
 (* |} in *)
     (* let s = input |> parse_input in *)
-    (* let s = Part1.input |> parse_input in *)
-    let s = Input.get_input ~year:2025 ~day:06 |> parse_input in
-    print_s [%sexp (s : string list list)];
+    let s = Part1.input |> parse_input in
+    (* let s = Input.get_input ~year:2025 ~day:06 |> parse_input in *)
+    print_s [%sexp (s : string list list * char list)];
     [%expect {|11|}]
 end
