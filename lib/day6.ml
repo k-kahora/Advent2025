@@ -77,36 +77,56 @@ module Part2Test = struct
   let%expect_test "[Day6] part2" =
     let[@ocaml.warning "-26"] real_input = Input.get_input ~year:2025 ~day:06 in
     let c, symbol_list =
-      parse_input real_input
+      parse_input Part2.input
       (* |> true_list |> Stdlib.Option.get *)
     in
     print_s [%sexp (symbol_list : char list)];
-    [%expect {||}];
+    [%expect {| (* + * +) |}];
     print_s [%sexp (c : string)];
-    [%expect ""];
+    [%expect " 
+  \"123 328  51 64 \\
+ \\n 45 64  387 23 \\
+ \\n  6 98  215 314\\
+ \\n\"
+ "];
     let b = c |> itemize in
     let trans = c |> itemize |> true_list |> Stdlib.Option.get in
     print_s [%sexp (b : char list list)];
-    [%expect "normal"];
+    [%expect " 
+ ((1 2 3 \" \" 3 2 8 \" \" \" \" 5 1 \" \" 6 4 \" \")
+  (\" \" 4 5 \" \" 6 4 \" \" \" \" 3 8 7 \" \" 2 3 \" \")
+  (\" \" \" \" 6 \" \" 9 8 \" \" \" \" 2 1 5 \" \" 3 1 4))
+ "];
     print_s [%sexp (trans : char list list)];
-    [%expect "transpose"];
+    [%expect " 
+ ((1 \" \" \" \") (2 4 \" \") (3 5 6) (\" \" \" \" \" \") (3 6 9) (2 4 8) (8 \" \" \" \")
+  (\" \" \" \" \" \") (\" \" 3 2) (5 8 1) (1 7 5) (\" \" \" \" \" \") (6 2 3) (4 3 1)
+  (\" \" \" \" 4))
+ "];
     let out_n = trans |> Stdlib.List.map sanezite in
     print_s [%sexp (b : char list list)];
-    [%expect ""];
+    [%expect " 
+ ((1 2 3 \" \" 3 2 8 \" \" \" \" 5 1 \" \" 6 4 \" \")
+  (\" \" 4 5 \" \" 6 4 \" \" \" \" 3 8 7 \" \" 2 3 \" \")
+  (\" \" \" \" 6 \" \" 9 8 \" \" \" \" 2 1 5 \" \" 3 1 4))
+ "];
     print_s [%sexp (out_n : int list list)];
-    [%expect ""];
+    [%expect " 
+ ((1) (2 4) (3 5 6) () (3 6 9) (2 4 8) (8) () (3 2) (5 8 1) (1 7 5) ()
+  (6 2 3) (4 3 1) (4))
+ "];
     let numbers = out_n |> Stdlib.List.map convert_to_numbers in
     print_s [%sexp (numbers : int list)];
-    [%expect ""];
+    [%expect "(1 24 356 0 369 248 8 0 32 581 175 0 623 431 4)"];
     let chunked = numbers |> chunk_by_zero in
     print_s [%sexp (chunked : int list list)];
-    [%expect ""];
+    [%expect "((356 24 1) (8 248 369) (175 581 32) (4 431 623))"];
     let sum = summate chunked symbol_list in
     print_s [%sexp (sum : int list)];
-    [%expect ""];
+    [%expect "(8544 625 3253600 1058)"];
     let final = Stdlib.List.fold_left ( + ) 0 sum in
     print_s [%sexp (final : int)];
-    [%expect ""]
+    [%expect "3263827"]
 end
 
 module Part1 = struct
