@@ -1,7 +1,7 @@
 (library
  (inline_tests)
  (name Advent)
- (libraries stdio base eio eio_main piaf input)
+ (libraries stdio base eio eio_main piaf input angstrom)
   (modules day1 day2 day3 day4 day5 mono)
 
  (preprocess
