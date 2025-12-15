@@ -94,6 +94,14 @@ module Part2 = struct
       done
     done;
     manifold
+
+  let final_values manifold =
+    let ending = Array.length manifold in
+    Array.fold_left
+      (fun total tachyon ->
+        match tachyon with Beam a -> total + a | _ -> total)
+      0
+      manifold.(ending - 1)
 end
 
 module Part2Test = struct
@@ -104,16 +112,52 @@ module Part2Test = struct
   let%expect_test "[day7] expect test beam" =
     let s = parse_input example |> list_to_array in
     print_s [%sexp (s : char array array)];
-    [%expect {||}];
+    [%expect {|
+      ((. . . . . . . S . . . . . . .) (. . . . . . . . . . . . . . .)
+       (. . . . . . . ^ . . . . . . .) (. . . . . . . . . . . . . . .)
+       (. . . . . . ^ . ^ . . . . . .) (. . . . . . . . . . . . . . .)
+       (. . . . . ^ . ^ . ^ . . . . .) (. . . . . . . . . . . . . . .)
+       (. . . . ^ . ^ . . . ^ . . . .) (. . . . . . . . . . . . . . .)
+       (. . . ^ . ^ . . . ^ . ^ . . .) (. . . . . . . . . . . . . . .)
+       (. . ^ . . . ^ . . . . . ^ . .) (. . . . . . . . . . . . . . .)
+       (. ^ . ^ . ^ . ^ . ^ . . . ^ .) (. . . . . . . . . . . . . . .))
+      |}];
     (* let q_fold = s |> quantom_manifold in *)
     (* print_s [%sexp (q_fold : char array array)]; *)
     (* [%expect {||}]; *)
     let tachs = s |> tachyons in
     print_s [%sexp (tachs : tachyon array array)];
-    [%expect {|sexp|}];
+    [%expect {|
+      ((. . . . . . . S . . . . . . .) (. . . . . . . . . . . . . . .)
+       (. . . . . . . ^ . . . . . . .) (. . . . . . . . . . . . . . .)
+       (. . . . . . ^ . ^ . . . . . .) (. . . . . . . . . . . . . . .)
+       (. . . . . ^ . ^ . ^ . . . . .) (. . . . . . . . . . . . . . .)
+       (. . . . ^ . ^ . . . ^ . . . .) (. . . . . . . . . . . . . . .)
+       (. . . ^ . ^ . . . ^ . ^ . . .) (. . . . . . . . . . . . . . .)
+       (. . ^ . . . ^ . . . . . ^ . .) (. . . . . . . . . . . . . . .)
+       (. ^ . ^ . ^ . ^ . ^ . . . ^ .) (. . . . . . . . . . . . . . .))
+      |}];
     let quant = tachs |> quantom_manifold in
     print_s [%sexp (quant : tachyon array array)];
-    [%expect {|tachs|}]
+    [%expect {|
+      ((. . . . . . . S . . . . . . .) (. . . . . . . 1 . . . . . . .)
+       (. . . . . . 1 ^ 1 . . . . . .) (. . . . . . 1 . 1 . . . . . .)
+       (. . . . . 1 ^ 2 ^ 1 . . . . .) (. . . . . 1 . 2 . 1 . . . . .)
+       (. . . . 1 ^ 3 ^ 3 ^ 1 . . . .) (. . . . 1 . 3 . 3 . 1 . . . .)
+       (. . . 1 ^ 4 ^ 3 3 1 ^ 1 . . .) (. . . 1 . 4 . 3 3 1 . 1 . . .)
+       (. . 1 ^ 5 ^ 4 3 4 ^ 2 ^ 1 . .) (. . 1 . 5 . 4 3 4 . 2 . 1 . .)
+       (. 1 ^ 1 5 4 ^ 7 4 . 2 1 ^ 1 .) (. 1 . 1 5 4 . 7 4 . 2 1 . 1 .)
+       (1 ^ 2 ^ A ^ B ^ B ^ 2 1 1 ^ 1) (1 . 2 . A . B . B . 2 1 1 . 1))
+      |}];
+    let final_value = quant |> final_values in
+    print_s [%sexp (final_value : int)];
+    [%expect {| 40 |}];
+    let real_answer =
+      parse_input @@ Input.get_input ~year:2025 ~day:07
+      |> list_to_array |> tachyons |> quantom_manifold |> final_values
+    in
+    print_s [%sexp (real_answer : int)];
+    [%expect {| 10733529153890 |}]
 end
 
 module Part1 = struct
@@ -176,11 +220,25 @@ module Part1Test = struct
 
   let%expect_test "[day7] expect test beam" =
     let s, ans =
+      Part1.input |> parse_input |> list_to_array |> go_through_manifold
+    in
+    print_s [%sexp (s : char array array)];
+    [%expect {|
+      ((. . . . . . . S . . . . . . .) (. . . . . . . | . . . . . . .)
+       (. . . . . . | ^ | . . . . . .) (. . . . . . | . | . . . . . .)
+       (. . . . . | ^ | ^ | . . . . .) (. . . . . | . | . | . . . . .)
+       (. . . . | ^ | ^ | ^ | . . . .) (. . . . | . | . | . | . . . .)
+       (. . . | ^ | ^ | | | ^ | . . .) (. . . | . | . | | | . | . . .)
+       (. . | ^ | ^ | | | ^ | ^ | . .) (. . | . | . | | | . | . | . .)
+       (. | ^ | | | ^ | | . | | ^ | .) (. | . | | | . | | . | | . | .)
+       (| ^ | ^ | ^ | ^ | ^ | | | ^ |) (| . | . | . | . | . | | | . |))
+      |}];
+    print_s [%sexp (ans : int)];
+    [%expect {| 21 |}];
+    let _, real_ans =
       Input.get_input ~year:2025 ~day:07
       |> parse_input |> list_to_array |> go_through_manifold
     in
-    print_s [%sexp (s : char array array)];
-    [%expect {||}];
-    print_s [%sexp (ans : int)];
-    [%expect {||}]
+    print_s [%sexp (real_ans : int)];
+    [%expect {| 1533 |}]
 end
