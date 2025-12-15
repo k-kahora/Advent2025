@@ -35,21 +35,62 @@ module Part2 = struct
 ...............
 |}
 
-  let quantom_manifold manifold =
+  let v = function '.' | '^' -> 0 | a -> char_int a
+
+  (* ADT needed *)
+  type tachyon = Beam of int | Splitter | Empty | Emitter
+
+  let sexp_of_tachyon tachyon =
+    let module Sex = Base.Sexp in
+    let hex_value = Printf.sprintf "%1X" in
+    (match tachyon with
+    | Splitter -> "^"
+    | Empty -> "."
+    | Emitter -> "S"
+    | Beam value -> hex_value value)
+    |> Sex.Atom
+
+  let tachyons manifold =
+    Array.map
+      (fun a ->
+        Array.map
+          (function
+            | '^' -> Splitter
+            | '.' -> Empty
+            | 'S' -> Emitter
+            | _ -> failwith "invalid input")
+          a)
+      manifold
+
+  let[@ocaml.warning "-8"] extract_juice = function
+    | Beam a -> a
+    | Empty | Splitter | Emitter -> 0
+
+  let quantom_manifold (manifold : tachyon array array) =
     for i = 1 to Array.length manifold - 1 do
       for j = 0 to Array.length manifold.(0) - 1 do
-        match manifold.(i).(j) with
-        | '^' -> (
-            match manifold.(i - 1).(j) with
-            | '1' ->
-                manifold.(i).(j + 1) <- int_char 1;
-                manifold.(i).(j - 1) <- int_char 1
-            | _ -> ())
-        | '.' -> (
-            match manifold.(i - 1).(j) with
-            | 'S' | '1' -> manifold.(i).(j) <- int_char 1
-            | _ -> ())
-        | _ -> ()
+        (* NOTE find merges *)
+        let current = manifold.(i).(j) in
+        let above = manifold.(i - 1).(j) in
+        match current with
+        | Empty -> (
+            match above with
+            | Emitter -> manifold.(i).(j) <- Beam 1
+            | Beam _ as a -> manifold.(i).(j) <- a
+            | Splitter | Empty -> ())
+        | Emitter -> failwith "no emitter should be found"
+        | Splitter -> (
+            match above with
+            | Empty | Emitter | Splitter -> ()
+            | Beam juice_value ->
+                manifold.(i).(j - 1) <-
+                  Beam (juice_value + extract_juice manifold.(i).(j - 1));
+                manifold.(i).(j + 1) <-
+                  Beam (juice_value + extract_juice manifold.(i).(j + 1)))
+        | Beam a -> (
+            match above with
+            | Beam v -> manifold.(i).(j) <- Beam (v + a)
+            | Empty | Splitter | Emitter -> ())
       done
     done;
     manifold
@@ -64,9 +105,15 @@ module Part2Test = struct
     let s = parse_input example |> list_to_array in
     print_s [%sexp (s : char array array)];
     [%expect {||}];
-    let q_fold = s |> quantom_manifold in
-    print_s [%sexp (q_fold : char array array)];
-    [%expect {||}]
+    (* let q_fold = s |> quantom_manifold in *)
+    (* print_s [%sexp (q_fold : char array array)]; *)
+    (* [%expect {||}]; *)
+    let tachs = s |> tachyons in
+    print_s [%sexp (tachs : tachyon array array)];
+    [%expect {|sexp|}];
+    let quant = tachs |> quantom_manifold in
+    print_s [%sexp (quant : tachyon array array)];
+    [%expect {|tachs|}]
 end
 
 module Part1 = struct
