@@ -27,6 +27,7 @@ module Part1 = struct
 819,987,18
 117,168,530
 805,96,715
+
 346,949,466
 970,615,88
 941,993,340
@@ -51,26 +52,59 @@ module Part1 = struct
     let make_point ~x ~y ~z = { x; y; z }
   end
 
+  let point_mapping : Point.t list -> Point.t array = Base.List.to_array
+
   let get_straight_line { Point.x = x1; y = y1; z = z1 }
       { Point.x = x2; y = y2; z = z2 } : int =
     let ( ** ) : int -> int -> int = Base.Int.( ** ) in
     ((x1 - x2) ** 2) + ((y1 - y2) ** 2) + ((z1 - z2) ** 2)
 
-  let whole_city : Point.t list -> (int * Point.t * Point.t) list =
+  let whole_city : Point.t list -> (int * int * int) list =
    fun points ->
-    let f p1 p2 = (get_straight_line p1 p2, p1, p2) in
-    let rec loop points acc =
+    let f p1 p2 = get_straight_line p1 p2 in
+    let rec loop i points acc =
       match points with
       | [] -> acc
       | point :: tail ->
           let weights =
-            List.fold_left
-              (fun weights pointb -> f point pointb :: weights)
-              [] tail
+            Base.List.foldi
+              ~f:(fun j weights pointb ->
+                (f point pointb, i, i + j + 1) :: weights)
+              ~init:[] tail
           in
-          loop tail (weights :: acc)
+          loop (i + 1) tail (weights :: acc)
     in
-    loop points [] |> List.flatten
+    loop 0 points [] |> List.flatten
+
+  module IntArray = struct
+    type t = int array
+
+    let sexp_of_t i =
+      Base.Sexp.Atom
+        (Array.fold_left
+           (fun atom element -> atom ^ Printf.sprintf "%2d " element)
+           "[" i
+        ^ "]")
+  end
+
+  let union_find ~parents:par ~ranks:rank (i, j) =
+    let rec find point =
+      if point <> par.(point) then find par.(point) else point
+    in
+    let union point1 point2 =
+      let parent1, parent2 = (find point1, find point2) in
+      if parent1 <> parent2 then
+        if rank.(parent1) >= rank.(parent2) then (
+          par.(parent2) <- parent1;
+          rank.(parent1) <- rank.(parent1) + rank.(parent2))
+        else (
+          par.(parent1) <- parent2;
+          rank.(parent2) <- rank.(parent2) + rank.(parent1))
+    in
+    union i j;
+    Stdio.(print_s [%sexp (par : IntArray.t)]);
+    Stdio.(print_s [%sexp (rank : IntArray.t)]);
+    print_endline ""
 
   let junction_box_locations (input : string) =
     let module A = Angstrom in
@@ -101,14 +135,44 @@ module Part1Test = struct
   include Part1
 
   let%expect_test "[day8] part1" =
-    let s = junction_box_locations example in
+    let _true_input = Input.get_input ~year:2025 ~day:08 in
+    let s = junction_box_locations _true_input in
     print_s [%sexp (s : Point.t list)];
+    [%expect {||}];
+    let mapping = point_mapping s in
+    print_s [%sexp (mapping : Point.t array)];
     [%expect {||}];
     let city_block = s |> whole_city in
     let city_block_sorted =
       city_block |> List.sort ~compare:(fun (a, _, _) (b, _, _) -> compare a b)
     in
-    let ten = List.take city_block_sorted 10 in
+    let ten_true = List.take city_block_sorted 1000 in
+    print_s [%sexp (ten_true : (int * int * int) list)];
+    [%expect {||}];
+    let ten =
+      List.take city_block_sorted 10
+      |> Stdlib.List.map (fun (a, b, c) -> (a, mapping.(b), mapping.(c)))
+    in
     print_s [%sexp (ten : (int * Point.t * Point.t) list)];
-    [%expect {||}]
+    [%expect {||}];
+    let one _ = 1 in
+    let par = Stdlib.Array.init (Array.length mapping) Stdlib.Fun.id in
+    let rank = Stdlib.Array.init (Array.length mapping) one in
+    let edges = Stdlib.List.map (fun (_, i, j) -> (i, j)) ten_true in
+    print_s [%sexp (edges : (int * int) list)];
+    [%expect ""];
+    Stdlib.List.iter
+      (fun edge -> union_find ~parents:par ~ranks:rank edge)
+      edges;
+    print_s [%sexp (par : int array)];
+    [%expect ""];
+    print_s [%sexp (rank : int array)];
+    [%expect ""];
+    Array.sort ~compare rank;
+    let top_3 = Array.sub ~len:3 ~pos:0 (Array.rev rank) in
+    print_s [%sexp (top_3 : int array)];
+    [%expect ""];
+    let result = Stdlib.Array.fold_left ( * ) 1 top_3 in
+    print_s [%sexp (result : int)];
+    [%expect "result"]
 end
