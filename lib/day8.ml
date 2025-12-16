@@ -35,8 +35,25 @@ module Part1 = struct
 425,690,689
 |}
 
+  module Point : sig
+    type t
+
+    val make_point : x:int -> y:int -> z:int -> t
+    val sexp_of_t : t -> Sexplib0.Sexp.t
+  end = struct
+    type t = { x : int; y : int; z : int }
+
+    let sexp_of_t point =
+      let module Sex = Base.Sexp in
+      Sex.Atom (Printf.sprintf "[%d,%d,%d]" point.x point.y point.z)
+
+    let _ = sexp_of_t
+    let make_point ~x ~y ~z = { x; y; z }
+  end
+
   let junction_box_locations (input : string) =
     let module A = Angstrom in
+    let module P = Point in
     let parser =
       let number = function '0' .. '9' -> true | _ -> false in
       let get_pos =
@@ -44,7 +61,12 @@ module Part1 = struct
           take_while number
           <* take_while @@ function ',' | '\n' -> true | _ -> false)
       in
-      let x_y_z = A.(count 3 get_pos) in
+      let[@ocaml.warning "-8"] x_y_z =
+        let int = int_of_string in
+        A.(
+          count 3 get_pos >>| fun (x :: y :: z :: _) ->
+          P.make_point ~x:(int x) ~y:(int y) ~z:(int z))
+      in
       A.many_till x_y_z A.end_of_input
     in
     match A.parse_string ~consume:All parser input with
@@ -59,6 +81,6 @@ module Part1Test = struct
 
   let%expect_test "[day8] part1" =
     let s = junction_box_locations example in
-    print_s [%sexp (s : string list list)];
+    print_s [%sexp (s : Point.t list)];
     [%expect {||}]
 end
