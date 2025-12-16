@@ -108,6 +108,7 @@ module Part1Test = struct
     let city_block_sorted =
       city_block |> List.sort ~compare:(fun (a, _, _) (b, _, _) -> compare a b)
     in
-    print_s [%sexp (city_block_sorted : (int * Point.t * Point.t) list)];
+    let ten = List.take city_block_sorted 10 in
+    print_s [%sexp (ten : (int * Point.t * Point.t) list)];
     [%expect {||}]
 end
