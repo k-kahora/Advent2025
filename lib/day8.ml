@@ -36,7 +36,7 @@ module Part1 = struct
 |}
 
   module Point : sig
-    type t
+    type t = { x : int; y : int; z : int }
 
     val make_point : x:int -> y:int -> z:int -> t
     val sexp_of_t : t -> Sexplib0.Sexp.t
@@ -50,6 +50,27 @@ module Part1 = struct
     let _ = sexp_of_t
     let make_point ~x ~y ~z = { x; y; z }
   end
+
+  let get_straight_line { Point.x = x1; y = y1; z = z1 }
+      { Point.x = x2; y = y2; z = z2 } : int =
+    let ( ** ) : int -> int -> int = Base.Int.( ** ) in
+    ((x1 - x2) ** 2) + ((y1 - y2) ** 2) + ((z1 - z2) ** 2)
+
+  let whole_city : Point.t list -> (int * Point.t * Point.t) list =
+   fun points ->
+    let f p1 p2 = (get_straight_line p1 p2, p1, p2) in
+    let rec loop points acc =
+      match points with
+      | [] -> acc
+      | point :: tail ->
+          let weights =
+            List.fold_left
+              (fun weights pointb -> f point pointb :: weights)
+              [] tail
+          in
+          loop tail (weights :: acc)
+    in
+    loop points [] |> List.flatten
 
   let junction_box_locations (input : string) =
     let module A = Angstrom in
@@ -82,5 +103,11 @@ module Part1Test = struct
   let%expect_test "[day8] part1" =
     let s = junction_box_locations example in
     print_s [%sexp (s : Point.t list)];
+    [%expect {||}];
+    let city_block = s |> whole_city in
+    let city_block_sorted =
+      city_block |> List.sort ~compare:(fun (a, _, _) (b, _, _) -> compare a b)
+    in
+    print_s [%sexp (city_block_sorted : (int * Point.t * Point.t) list)];
     [%expect {||}]
 end
