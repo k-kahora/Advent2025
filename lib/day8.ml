@@ -88,23 +88,27 @@ module Part1 = struct
   end
 
   let union_find ~parents:par ~ranks:rank (i, j) =
+    (* Keep track of N when we have unioned N times were good that last point is the one *)
     let rec find point =
       if point <> par.(point) then find par.(point) else point
     in
     let union point1 point2 =
       let parent1, parent2 = (find point1, find point2) in
-      if parent1 <> parent2 then
+      if parent1 <> parent2 then (
         if rank.(parent1) >= rank.(parent2) then (
           par.(parent2) <- parent1;
           rank.(parent1) <- rank.(parent1) + rank.(parent2))
         else (
           par.(parent1) <- parent2;
-          rank.(parent2) <- rank.(parent2) + rank.(parent1))
+          rank.(parent2) <- rank.(parent2) + rank.(parent1));
+        1)
+      else 0
     in
-    union i j;
+    let res = union i j in
     Stdio.(print_s [%sexp (par : IntArray.t)]);
     Stdio.(print_s [%sexp (rank : IntArray.t)]);
-    print_endline ""
+    print_endline "";
+    res
 
   let junction_box_locations (input : string) =
     let module A = Angstrom in
@@ -137,6 +141,7 @@ module Part1Test = struct
   let%expect_test "[day8] part1" =
     let _true_input = Input.get_input ~year:2025 ~day:08 in
     let s = junction_box_locations _true_input in
+    let n = List.length s in
     print_s [%sexp (s : Point.t list)];
     [%expect {||}];
     let mapping = point_mapping s in
@@ -146,7 +151,8 @@ module Part1Test = struct
     let city_block_sorted =
       city_block |> List.sort ~compare:(fun (a, _, _) (b, _, _) -> compare a b)
     in
-    let ten_true = List.take city_block_sorted 1000 in
+    let ten_true = city_block_sorted in
+    (* List.take city_block_sorted 10 in *)
     print_s [%sexp (ten_true : (int * int * int) list)];
     [%expect {||}];
     let ten =
@@ -161,9 +167,20 @@ module Part1Test = struct
     let edges = Stdlib.List.map (fun (_, i, j) -> (i, j)) ten_true in
     print_s [%sexp (edges : (int * int) list)];
     [%expect ""];
-    Stdlib.List.iter
-      (fun edge -> union_find ~parents:par ~ranks:rank edge)
-      edges;
+    let count = ref n in
+    let res =
+      List.fold_until ~init:(0, 0)
+        ~f:(fun final_edge edge ->
+          if !count = 1 then Continue_or_stop.Stop final_edge
+          else (
+            count := !count - union_find ~parents:par ~ranks:rank edge;
+            Continue_or_stop.Continue edge))
+        ~finish:(fun _ -> (0, 0))
+        edges
+    in
+    (* Stdlib.List.iter *)
+    (*   (fun edge -> union_find ~parents:par ~ranks:rank edge) *)
+    (*   edges; *)
     print_s [%sexp (par : int array)];
     [%expect ""];
     print_s [%sexp (rank : int array)];
@@ -174,5 +191,15 @@ module Part1Test = struct
     [%expect ""];
     let result = Stdlib.Array.fold_left ( * ) 1 top_3 in
     print_s [%sexp (result : int)];
+    [%expect "result"];
+    let part2_result =
+      let i, j = res in
+      let { Point.x = x1; y = _; z = _ }, { Point.x = x2; z = _; y = _ } =
+        (mapping.(i), mapping.(j))
+      in
+      print_s [%sexp ((mapping.(i), mapping.(j)) : Point.t * Point.t)];
+      x1 * x2
+    in
+    print_s [%sexp (part2_result : int)];
     [%expect "result"]
 end
