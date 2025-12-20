@@ -1,7 +1,8 @@
 (library
  (inline_tests)
  (name Advent)
- (libraries stdio base eio eio_main piaf input angstrom)
+ (libraries stdio base eio eio_main piaf input angstrom vg vg.htmlc brr js_of_ocaml)
+
   (modules day1 day2 day3 day4 day5 mono day6 day7 day8 day9)
 
  (preprocess

@@ -1,4 +1,6 @@
 (executable
- (public_name Advent)
+ (modes js)
  (name main)
- (libraries Advent))
+ (libraries vg brr vg.htmlc js_of_ocaml))
+
+ 
