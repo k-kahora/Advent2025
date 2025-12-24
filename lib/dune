@@ -1,12 +1,13 @@
 (library
  (inline_tests)
  (name Advent)
- (libraries stdio base eio eio_main piaf input angstrom vg vg.htmlc brr js_of_ocaml)
-
-  (modules day1 day2 day3 day4 day5 mono day6 day7 day8 day9)
-
+ ; (libraries stdio base eio eio_main piaf input angstrom vg )
+ (libraries stdio base input angstrom vg brr)
+  (modules day1 day2 day3 day4 day5 mono day6 day7 day8 day9 day9Image)
  (preprocess
   (pps ppx_inline_test ppx_expect ppx_jane)))
+
+
 
 (library
  (name input)

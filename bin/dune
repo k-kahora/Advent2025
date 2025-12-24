@@ -2,5 +2,6 @@
  (modes js)
  (name main)
  (libraries vg brr vg.htmlc js_of_ocaml))
+ ; (libraries Advent vg brr vg.htmlc js_of_ocaml))
 
  
