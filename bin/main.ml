@@ -10,17 +10,19 @@ module Js = Js_of_ocaml.Js
 
 (* let aspect = 1.618 *)
 let size = Size2.v 100. 100. (* mm *)
-let view = Box2.v P2.o (Size2.v 100. 100.)
 let _image = I.const (Color.v_srgb 0.314 0.784 0.471)
 let image = I.const Color.blue
 
-let box =
-  I.cut
-    (P.rect (Box2.v (P2.v 0. 0.) (P2.v 1. 1.)) P.empty)
-    (I.const Color.green)
+(* let box = *)
+(*   I.cut *)
+(*     (P.rect (Box2.v (P2.v 30. 0.) (P2.v 10. 10.)) P.empty) *)
+(*     (I.const Color.green) *)
 
-let image = I.blend box image
-(* let image = I.blend Advent.Day9Image.construct_cell image *)
+(* let grid, h, w = Images.Day9Image.construct_cell *)
+(* let image = I.blend grid image *)
+let view = Box2.v P2.o (Size2.v 1. 1.)
+let _size = Size2.v (1. *. 10.) (1. *. 10.)
+(* mm *)
 (* 2. Render *)
 
 let render oc =
@@ -40,19 +42,19 @@ let _main () =
   render stdout;
   0
 
-module FetchInput = struct
-  let fetch_text url =
-    let ( let* ) = Fut.bind in
-    let req = Brr_io.Fetch.Request.v (Jstr.v url) in
-    let* resp = Brr_io.Fetch.request req in
-    match resp with
-    | Ok r ->
-        Fut.return
-          (Brr_io.Fetch.Response.as_body r
-          |> Brr_io.Fetch.Body.text
-          |> Fut.to_promise ~ok:(fun a -> Jstr.to_string a |> Jv.of_string))
-    | Error err -> failwith (Jv.Error.message err |> Jstr.to_string)
-end
+(* module FetchInput = struct *)
+(*   let fetch_text url = *)
+(*     let ( let* ) = Fut.bind in *)
+(*     let req = Brr_io.Fetch.Request.v (Jstr.v url) in *)
+(*     let* resp = Brr_io.Fetch.request req in *)
+(*     match resp with *)
+(*     | Ok r -> *)
+(*         Fut.return *)
+(*           (Brr_io.Fetch.Response.as_body r *)
+(*           |> Brr_io.Fetch.Body.text *)
+(*           |> Fut.to_promise ~ok:(fun a -> Jstr.to_string a |> Jv.of_string)) *)
+(*     | Error err -> failwith (Jv.Error.message err |> Jstr.to_string) *)
+(* end *)
 
 let canvas = Canvas.create []
 let () = El.append_children (Document.body G.document) [ Canvas.to_el canvas ]
@@ -60,8 +62,8 @@ let r = Vgr.create (Vgr_htmlc.target canvas) `Other
 let _ = ignore (Vgr.render r (`Image (size, view, image)))
 let _ = ignore (Vgr.render r `End)
 
-let _ =
-  let open Fut.Syntax in
-  let* out = FetchInput.fetch_text "http://localhost:8000/input/day9.txt" in
-  Console.log [ out ];
-  Fut.return out
+(* let _ = *)
+(*   let open Fut.Syntax in *)
+(*   let* out = FetchInput.fetch_text "http://localhost:8000/input/day9.txt" in *)
+(*   Console.log [ out ]; *)
+(*   Fut.return out *)

@@ -100,7 +100,8 @@ let%expect_test "cycle test" =
 let%expect_test "file_read" =
   (* let res = part1 input_string in *)
   let l_number =
-    read_lines "/home/malcolm/Projects/ocaml/advent-of-code/2025/Advent/input"
+    read_lines
+      "/home/malcolm/Projects/ocaml/advent-of-code/2025/Advent/day1_input.txt"
     |> List.length
   in
   print_s [%sexp (l_number : int)];
@@ -109,7 +110,8 @@ let%expect_test "file_read" =
 let%expect_test "part 2" =
   (* let res = part1 input_string in *)
   let _input =
-    read_lines "/home/malcolm/Projects/ocaml/advent-of-code/2025/Advent/input"
+    read_lines
+      "/home/malcolm/Projects/ocaml/advent-of-code/2025/Advent/day1_input.txt"
   in
   let _l_number = part2 (read_input input_string) in
   let l_number = part2 _input in
@@ -119,7 +121,8 @@ let%expect_test "part 2" =
 let%expect_test "part 1" =
   (* let res = part1 input_string in *)
   let input =
-    read_lines "/home/malcolm/Projects/ocaml/advent-of-code/2025/Advent/input"
+    read_lines
+      "/home/malcolm/Projects/ocaml/advent-of-code/2025/Advent/day1_input.txt"
   in
   let l_number = part1 input in
   print_s [%sexp (l_number : int)];

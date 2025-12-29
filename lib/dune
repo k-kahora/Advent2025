@@ -2,8 +2,8 @@
  (inline_tests)
  (name Advent)
  ; (libraries stdio base eio eio_main piaf input angstrom vg )
- (libraries stdio base input angstrom vg brr)
-  (modules day1 day2 day3 day4 day5 mono day6 day7 day8 day9 day9Image)
+ (libraries stdio base input angstrom vg)
+  (modules day1 day2 day3 day4 day5 mono day6 day7 day8 day9 )
  (preprocess
   (pps ppx_inline_test ppx_expect ppx_jane)))
 
@@ -14,3 +14,21 @@
  (libraries stdio base eio eio_main piaf)
  (modules input)
 )
+
+; (library
+;  (inline_tests)
+;  (name day9_12)
+;  (libraries stdio base angstrom vg)
+;  (modules day9)
+;  (preprocess
+;   (pps ppx_inline_test ppx_expect ppx_jane)))
+
+; (library 
+;  (name Images)
+;  (inline_tests)
+;  (libraries day9_12 base stdio angstrom vg)
+;  (modules day9Image)
+; (preprocess
+;   (pps ppx_inline_test ppx_expect ppx_jane))
+;  )
+

@@ -1,3 +1,26 @@
+(* Part2 flood fill
+   Calculate the boundry points then run dfs on a point gaurnetted to be outside the boundry
+   this will give you all your outside points
+ *)
+(*
+  TODO
+  English Explanation
+  First you must constuct a grid with (i,j)
+  Then you can go thrrough each pair of point
+  They will always be in line with eachother 
+  This way you can fill green tills from one point to the next
+  Then calculate the bounding box
+  Start a bfs outside the bounding box to calculate all the outside area
+  Everythin else thats not red should be green by default
+  Once you have the full polygon you can begin maximal rectangle problem
+  iterate through the each row constructing a histrogram from that point to the right
+  once you have the histrogram you can run the monotonic stack to calculate the max rectangel in that range
+  as you progress down increment for every green and when you get to a non green reset to zero
+  
+
+
+*)
+
 module Part1 = struct
   let example = {|7,1
 11,1
@@ -73,13 +96,9 @@ module Render = struct
   let place_tiles tiles grid =
     List.iter (fun (i, j) -> grid.(i).(j) <- Red) tiles
 
-  let grid =
-    let maximum_x =
-      parse_input example |> List.map fst |> List.fold_left max 0
-    in
-    let maximum_y =
-      parse_input example |> List.map snd |> List.fold_left max 0
-    in
+  let grid input =
+    let maximum_x = parse_input input |> List.map fst |> List.fold_left max 0 in
+    let maximum_y = parse_input input |> List.map snd |> List.fold_left max 0 in
     Array.init (maximum_x + 1) @@ fun _ ->
     Array.init (maximum_y + 1) (fun _ -> Empty)
 end
@@ -92,7 +111,7 @@ module TestGrid = struct
   type grid = tile array array
 
   let%expect_test "hello form part1 test" =
-    let g = Render.grid in
+    let g = Render.grid example in
     let tiles = parse_input example in
     print_s [%sexp (tiles : (int * int) list)];
     [%expect ""];
@@ -103,15 +122,22 @@ module TestGrid = struct
 end
 
 module Part1Test = struct
+  let read_file filename =
+    let ic = open_in filename in
+    let len = in_channel_length ic in
+    let s = really_input_string ic len in
+    close_in ic;
+    s
+
   open Base
   open Stdio
   include Part1
 
   let%expect_test "hello form part1 test" =
-    let real_input = Input.get_input ~year:2025 ~day:09 in
-    print_s [%sexp (real_input : string)];
+    let _real_input = Input.get_input ~day:09 ~year:2025 in
+    print_s [%sexp (example : string)];
     [%expect ""];
-    let red_tile_locs = real_input |> parse_input in
+    let red_tile_locs = example |> parse_input in
     print_s [%sexp (red_tile_locs : (int * int) list)];
     [%expect ""];
 
