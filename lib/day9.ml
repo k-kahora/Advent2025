@@ -5,11 +5,11 @@
 (*
   TODO
   English Explanation
-  First you must constuct a grid with (i,j)
-  Then you can go thrrough each pair of point
-  They will always be in line with eachother 
-  This way you can fill green tills from one point to the next
-  Then calculate the bounding box
+  DONE First you must constuct a grid with (i,j)
+  DONE Then you can go thrrough each pair of point
+  DONE They will always be in line with eachother 
+  DONE This way you can fill green tills from one point to the next
+  TODO Then calculate the bounding box
   Start a bfs outside the bounding box to calculate all the outside area
   Everythin else thats not red should be green by default
   Once you have the full polygon you can begin maximal rectangle problem
@@ -98,6 +98,14 @@ module Part2 = struct
     match A.parse_string ~consume:All many input with
     | Ok a -> a
     | Error err -> failwith err
+
+  let calculate_bounding_box red_tiles =
+    List.fold_left
+      (fun (min_x, min_y, max_x, max_y) (x, y) ->
+        (min min_x x, min min_y y, max max_x x, max max_y y))
+      (Int.max_int, Int.max_int, 0, 0)
+      red_tiles
+    |> fun (a, b, c, d) -> (a - 1, b - 1, c + 1, d + 1)
 end
 
 module Render = struct
@@ -193,6 +201,9 @@ module Part2Test = struct
     let viz_grid = Array.transpose viz_grid |> Stdlib.Option.get in
     (* print_s [%sexp (greens : (int * int) list list)]; *)
     (* [%expect {||}]; *)
+    let bounding_box = calculate_bounding_box tile_grid in
+    print_s [%sexp (bounding_box : int * int * int * int)];
+    [%expect ""];
     print_s [%sexp (viz_grid : grid)];
     [%expect {||}]
 end
