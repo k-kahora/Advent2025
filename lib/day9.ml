@@ -105,13 +105,14 @@ module Part2 = struct
         (min min_x x, min min_y y, max max_x x, max max_y y))
       (Int.max_int, Int.max_int, 0, 0)
       red_tiles
-    |> fun (a, b, c, d) -> (a - 1, b - 1, c + 1, d + 1)
+
+  (* Check bounds *)
 end
 
 module Render = struct
   include Part1
 
-  type tile = Empty | Red | Green
+  type tile = Empty | Red | Green | Outside
 
   let sexp_of_grid (grid : tile array array) =
     let open Base in
@@ -121,7 +122,13 @@ module Render = struct
           let string_row =
             Array.fold
               ~f:(fun acc tile ->
-                acc ^ match tile with Empty -> "." | Red -> "#" | Green -> "X")
+                acc
+                ^
+                match tile with
+                | Empty -> "O"
+                | Red -> "#"
+                | Green -> "X"
+                | Outside -> ".")
               ~init:"" row
           in
           acc ^ string_row ^ "\n")
@@ -131,7 +138,11 @@ module Render = struct
 
   let sexp_of_tile tile =
     let module Sex = Base.Sexp in
-    (match tile with Empty -> '.' | Red -> '#' | Green -> 'X')
+    (match tile with
+    | Empty -> 'O'
+    | Red -> '#'
+    | Green -> 'X'
+    | Outside -> '.')
     |> Base.String.of_char |> Sex.Atom
 
   (* Each point should fill in the grid *)
@@ -176,6 +187,26 @@ module Render = struct
     in
     loop tiles
 
+  let dfs start (grid : tile array array) =
+    let bounds_check x y =
+      try Some grid.(x).(y) with Invalid_argument _ -> None
+    in
+    let ( let* ) = Option.bind in
+    let rec dfs' (x, y) : unit option =
+      let* tile = bounds_check x y in
+      match tile with
+      | Empty ->
+          grid.(x).(y) <- Outside;
+          ignore
+            [
+              dfs' (x + 1, y); dfs' (x - 1, y); dfs' (x, y + 1); dfs' (x, y - 1);
+            ];
+          Some ()
+      | Outside | Green | Red -> None
+    in
+    ignore @@ dfs' start;
+    ()
+
   let grid input =
     let maximum_x = parse_input input |> List.map fst |> List.fold_left max 0 in
     let maximum_y = parse_input input |> List.map snd |> List.fold_left max 0 in
@@ -198,11 +229,12 @@ module Part2Test = struct
     let viz_grid = grid example in
     place_tiles tile_grid viz_grid;
     place_green tile_grid viz_grid;
-    let viz_grid = Array.transpose viz_grid |> Stdlib.Option.get in
     (* print_s [%sexp (greens : (int * int) list list)]; *)
     (* [%expect {||}]; *)
-    let bounding_box = calculate_bounding_box tile_grid in
-    print_s [%sexp (bounding_box : int * int * int * int)];
+    let x, y, _, _ = calculate_bounding_box tile_grid in
+    dfs (x, y) viz_grid;
+    let viz_grid = Array.transpose viz_grid |> Stdlib.Option.get in
+    print_s [%sexp ((x, y) : int * int)];
     [%expect ""];
     print_s [%sexp (viz_grid : grid)];
     [%expect {||}]
