@@ -16,6 +16,11 @@
   iterate through the each row constructing a histrogram from that point to the right
   once you have the histrogram you can run the monotonic stack to calculate the max rectangel in that range
   as you progress down increment for every green and when you get to a non green reset to zero
+  good problem to solve -> https://leetcode.com/problems/maximal-rectangle/submissions/1868010117/
+  easier problem to learn -> https://leetcode.com/problems/largest-rectangle-in-histogram/description/
+  Now that I have these doen I can begin my quest to complete this proble
+
+m
   
 
 
@@ -65,6 +70,36 @@ module Part1 = struct
     loop red_tiles []
 end
 
+module Part2 = struct
+  let example = {|7,1
+11,1
+11,7
+9,7
+9,5
+2,5
+2,3
+7,3|}
+
+  let parse_input input =
+    let module A = Angstrom in
+    let eat_whitespace =
+      A.(skip_while @@ function ' ' | '\n' | '\t' | '\r' -> true | _ -> false)
+    in
+    (* got line by line splitting by comma*)
+    let digit = function '0' .. '9' -> true | _ -> false in
+    let each_row =
+      let number = A.(eat_whitespace *> take_while digit <* char ',') in
+      A.(
+        lift2 (fun a b -> (int_of_string a, int_of_string b)) number
+        @@ take_while digit
+        <* eat_whitespace)
+    in
+    let many = A.(many_till each_row end_of_input) in
+    match A.parse_string ~consume:All many input with
+    | Ok a -> a
+    | Error err -> failwith err
+end
+
 module Render = struct
   include Part1
 
@@ -94,13 +129,72 @@ module Render = struct
   (* Each point should fill in the grid *)
   (* Reprsent as an rray provide a 1 grid buffer from x and y *)
   let place_tiles tiles grid =
-    List.iter (fun (i, j) -> grid.(i).(j) <- Red) tiles
+    List.iter
+      (fun (i, j) -> grid.(i).(j) <- Red)
+      tiles (* Base.List.chunks_of *)
+
+  (* This needs a way to go over each section and find the lines between them
+     chunk by 2 and create a line of new items between
+
+
+ *)
+  let place_green tiles grid =
+    let points (x, y) finish = function
+      | `Same_X -> List.init (finish - y) (fun i -> (x, y + i))
+      | `Same_Y -> List.init (finish - x) (fun i -> (x + i, y))
+    in
+
+    let generate_green (x1, y1) (x2, y2) =
+      (if y1 == y2 then
+         let x_low = min x1 x2 in
+         let x_high = max x1 x2 in
+         points (x_low + 1, y1) x_high `Same_Y
+       else
+         let y_low = min y1 y2 in
+         let y_high = max y1 y2 in
+         points (x1, y_low + 1) y_high `Same_X)
+      |> List.iter (fun (i, j) -> grid.(i).(j) <- Green)
+    in
+
+    let start = List.hd tiles in
+    let rec loop = function
+      | a :: (b :: _ as rest) ->
+          generate_green a b;
+          loop rest
+      | last_point :: rest ->
+          generate_green start last_point;
+          loop rest
+      | [] -> ()
+    in
+    loop tiles
 
   let grid input =
     let maximum_x = parse_input input |> List.map fst |> List.fold_left max 0 in
     let maximum_y = parse_input input |> List.map snd |> List.fold_left max 0 in
     Array.init (maximum_x + 1) @@ fun _ ->
     Array.init (maximum_y + 1) (fun _ -> Empty)
+end
+
+module Part2Test = struct
+  include Part2
+  include Render
+  open Stdio
+  open! Base
+  (* NOTE *)
+  (*
+    I need a way to define the borders of the grid with green tiles
+*)
+
+  let%expect_test "[ part2 testing ]" =
+    let[@ocaml.warning "-26"] tile_grid = parse_input example in
+    let viz_grid = grid example in
+    place_tiles tile_grid viz_grid;
+    place_green tile_grid viz_grid;
+    let viz_grid = Array.transpose viz_grid |> Stdlib.Option.get in
+    (* print_s [%sexp (greens : (int * int) list list)]; *)
+    (* [%expect {||}]; *)
+    print_s [%sexp (viz_grid : grid)];
+    [%expect {||}]
 end
 
 module TestGrid = struct
