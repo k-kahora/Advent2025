@@ -125,7 +125,7 @@ module Render = struct
                 acc
                 ^
                 match tile with
-                | Empty -> "O"
+                | Empty -> "X"
                 | Red -> "#"
                 | Green -> "X"
                 | Outside -> ".")
@@ -139,7 +139,7 @@ module Render = struct
   let sexp_of_tile tile =
     let module Sex = Base.Sexp in
     (match tile with
-    | Empty -> 'O'
+    | Empty -> 'X'
     | Red -> '#'
     | Green -> 'X'
     | Outside -> '.')
@@ -191,21 +191,18 @@ module Render = struct
     let bounds_check x y =
       try Some grid.(x).(y) with Invalid_argument _ -> None
     in
-    let ( let* ) = Option.bind in
-    let rec dfs' (x, y) : unit option =
-      let* tile = bounds_check x y in
-      match tile with
-      | Empty ->
-          grid.(x).(y) <- Outside;
-          ignore
-            [
-              dfs' (x + 1, y); dfs' (x - 1, y); dfs' (x, y + 1); dfs' (x, y - 1);
-            ];
-          Some ()
-      | Outside | Green | Red -> None
+    let rec dfs' stack : unit =
+      match stack with
+      | [] -> ()
+      | (x, y) :: rest -> (
+          match bounds_check x y with
+          | Some Empty ->
+              grid.(x).(y) <- Outside;
+              dfs'
+              @@ ((x, y + 1) :: (x, y - 1) :: (x - 1, y) :: (x + 1, y) :: rest)
+          | _ -> dfs' rest)
     in
-    ignore @@ dfs' start;
-    ()
+    dfs' [ start ]
 
   let grid input =
     let maximum_x = parse_input input |> List.map fst |> List.fold_left max 0 in
